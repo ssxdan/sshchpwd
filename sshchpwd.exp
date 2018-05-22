@@ -170,10 +170,10 @@ expect {
 		send_user " (changing password at prompt)\n"
 		send "passwd\n" 
 		expect {
-			-re "\[oO\]ld \[pP\]assword:| UNIX \[pP\]assword:| anterior:" {
+			-re "\[oO\]ld \[pP\]assword:| UNIX \[pP\]assword: | anterior:| contraseña de UNIX" {
 				send "$oldpwd\n"
 				expect {
-					"You must wait longer" {
+					-re "You must wait longer|Debe esperar" {
 						send_error "1;$server;You must wait longer.\n"
 						exit 1
 					}
@@ -239,6 +239,29 @@ expect {
 						send "$newpwd\n"
 						expect {
 							"contraseña:" {
+								send "$newpwd\n"
+								expect {
+									-re "$prompt" {
+										send_user " (detected return to shell command prompt)\n"
+										send_error "0;$server;Password successfully changed.\n"
+										exit 0
+									}
+									default {
+										send_error "1;$server;Password change failed.\n"
+										exit 1
+									}
+								}
+							}
+							default {
+								send_error "1;$server;Password change failed.\n"
+								exit 1
+							}
+						}
+					}
+					"New UNIX password: " {
+						send "$newpwd\n"
+						expect {
+							"Retype new UNIX password: " {
 								send "$newpwd\n"
 								expect {
 									-re "$prompt" {

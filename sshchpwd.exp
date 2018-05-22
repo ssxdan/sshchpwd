@@ -20,6 +20,11 @@
 # The {port} and {token} command-line parameters are optional. If the server
 # uses SecurID (or another one-time password), enter it on the command-line as
 # the third parameter.
+#
+# For use proxy
+# set proxy variable to 1
+# export PROXY_HOST=127.0.0.1
+# export export PROXY_PORT=1080
 
 set timeout 15
 set server [lindex $argv 0]
@@ -28,12 +33,20 @@ set tokpwd [lindex $argv 2]
 set oldpwd $env(OLD_PASSWORD)
 set newpwd $env(NEW_PASSWORD)
 set prompt "\[>%\\$#\] "
+set proxy 0
 
 if { $port == "" }  { set port "22" }
 if { $tokpwd == "" }  { set tokpwd $oldpwd }
 
 send_user "connecting to $server on port $port\n"
-spawn ssh -p $port $server
+if { $proxy == 1 } {
+	set proxy_host $env(PROXY_HOST)
+	set proxy_port $env(PROXY_PORT)
+	send_user "Using proxy $proxy_host:$proxy_port"
+	spawn ssh -o "ProxyCommand=nc -x $proxy_host:$proxy_port %h %p" $server
+} else {
+	spawn ssh -p $port $server
+}
 
 # Mission of this first expect - get to the shell command prompt. If the
 # password is expired and we have to change it before getting to the prompt,

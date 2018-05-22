@@ -42,7 +42,7 @@ send_user "connecting to $server on port $port\n"
 if { $proxy == 1 } {
 	set proxy_host $env(PROXY_HOST)
 	set proxy_port $env(PROXY_PORT)
-	send_user "Using proxy $proxy_host:$proxy_port"
+	send_user "Using proxy $proxy_host:$proxy_port\n"  
 	spawn ssh -o "ProxyCommand=nc -x $proxy_host:$proxy_port %h %p" $server
 } else {
 	spawn ssh -p $port $server
@@ -84,21 +84,21 @@ expect {
 						send "$newpwd\n" 
 						expect {
 							-re "\[nN\]ew \[pP\]assword:|\[nN\]ew \[pP\]assword \[aA\]gain:" {
-								send_user "\nPassword is current.\n"
+								send_error "0;$server;Password is current.\n"
 								exit 0
 							}
 							"not match the" {
-								send_user "\nPassword change failed.\n"
+								send_error "1;$server;Password change failed.\n"
 								exit 1
 							}
 							default {
-								send_user "\nPassword change failed.\n"
+								send_error "1;$server;Password change failed.\n"
 								exit 1
 							}
 						}
 					}
 					default {
-						send_user "\nPassword change failed.\n"
+						send_error "1;$server;Password change failed.\n"
 						exit 1
 					}
 				}
@@ -107,7 +107,7 @@ expect {
 				send "$newpwd\n" 
 				expect {
 					"between changes." {
-						send_user "\nPassword change failed.\n"
+						send_error "1;$server;Necesary more time between changes.\n"
 						exit 1
 					}
 					-re "\[nN\]ew \[pP\]assword:|\[nN\]ew \[pP\]assword \[aA\]gain:" {
@@ -115,16 +115,16 @@ expect {
 						expect {
 							-re "$prompt" { 
 								send_user " (detected shell command prompt)\n"
-								send_user "Password successfully changed.\n"
+								send_error "0;$server;Password successfully changed.\n"
 								exit 0
 							}
 							"Connection to " { 
 								send_user " (detected connection closed - assuming password change successful)\n"
-								send_user "Password successfully changed.\n"
+								send_error "0;$server;Password successfully changed.\n"
 								exit 0
 							}
 							default {
-								send_user "\nPassword change failed.\n"
+								send_error "1;$server;Password change failed.\n"
 								exit 1
 							}
 						}
@@ -135,24 +135,24 @@ expect {
 				send "$newpwd\n" 
 				expect {
 					" UNIX password:" {
-						send_user "\nNew password is expired!\n"
+						send_error "1;$server;New password is expired!\n"
 						exit 1
 					}
 					-nocase "old password:" {
-						send_user "\nNew password is expired!\n"
+						send_error "1;$server;New password is expired!\n"
 						exit 1
 					}
 					"assword:" {
-						send_user "\nAutomated login failed.\n"
+						send_error "1;$server;Automated login failed.\n"
 						exit 1
 					}
 					-re "$prompt" { 
 						send_user " (detected shell command prompt)\n"
-						send_user "Password is current.\n"
+						send_error "0;$server;Password is current.\n"
 						exit 0
 					}
 					default {
-						send_user "\nAutomated login failed.\n"
+						send_error "1;$server;Automated login failed.\n"
 						exit 1
 					}
 				}
@@ -174,7 +174,7 @@ expect {
 				send "$oldpwd\n"
 				expect {
 					"You must wait longer" {
-						send_user "\nPassword change failed.\n"
+						send_error "1;$server;You must wait longer.\n"
 						exit 1
 					}
 					-re "not match the|password mismatch" {
@@ -185,21 +185,21 @@ expect {
 								send "$newpwd\n" 
 								expect {
 									-re "\[nN\]ew \[pP\]assword:|\[nN\]ew \[pP\]assword \[aA\]gain:" {
-										send_user "\nPassword is current.\n"
+										send_error "0;$server;Password is current.\n"
 										exit 0
 									}
 									"not match the" {
-										send_user "\nPassword change failed.\n"
+										send_error "1;$server;Password change failed.\n"
 										exit 1
 									}
 									default {
-										send_user "\nPassword change failed.\n"
+										send_error "1;$server;Password change failed.\n"
 										exit 1
 									}
 								}
 							}
 							default {
-								send_user "\nPassword change failed.\n"
+								send_error "1;$server;Password change failed.\n"
 								exit 1
 							}
 						}
@@ -208,7 +208,7 @@ expect {
 						send "$newpwd\n" 
 						expect {
 							"between changes." {
-								send_user "\nPassword change failed.\n"
+								send_error "1;$server;You must wait longer.\n"
 								exit 1
 							}
 							-re "\[nN\]ew \[pP\]assword:|\[nN\]ew \[pP\]assword \[aA\]gain:" {
@@ -216,21 +216,21 @@ expect {
 								expect {
 									-re "$prompt" { 
 										send_user " (detected return to shell command prompt)\n"
-										send_user "Password successfully changed.\n"
+										send_error "0;$server;Password successfully changed.\n"
 										exit 0
 									}
 									default {
-										send_user "\nPassword change failed.\n"
+										send_error "1;$server;Password change failed.\n"
 										exit 1
 									}
 								}
 							}
 							"BAD PASSWORD" {
-								send_user "\nPassword change failed.\n"
+								send_error "1;$server;BAD PASSWORD.\n"
 								exit 1
 							}
 							default {
-								send_user "\nPassword change failed.\n"
+								send_error "1;$server;Password change failed.\n"
 								exit 1
 							}
 						}
@@ -243,23 +243,23 @@ expect {
 								expect {
 									-re "$prompt" {
 										send_user " (detected return to shell command prompt)\n"
-										send_user "Password successfully changed.\n"
+										send_error "0;$server;Password successfully changed.\n"
 										exit 0
 									}
 									default {
-										send_user "\nPassword change failed.\n"
+										send_error "1;$server;Password change failed.\n"
 										exit 1
 									}
 								}
 							}
 							default {
-								send_user "\nPassword change failed.\n"
+								send_error "1;$server;Password change failed.\n"
 								exit 1
 							}
 						}
 					}
 					default {
-						send_user "\nPassword change failed.\n"
+						send_error "1;$server;Password change failed.\n"
 						exit 1
 					}
 				}
@@ -267,7 +267,7 @@ expect {
 		}
 	}
 	default {
-		send_user "\nAutomated login failed.\n"
+		send_error "1;$server;No connectivity to machine.\n"
 		exit 1
 	}
 }

@@ -43,9 +43,9 @@ if { $proxy == 1 } {
 	set proxy_host $env(PROXY_HOST)
 	set proxy_port $env(PROXY_PORT)
 	send_user "Using proxy $proxy_host:$proxy_port\n"  
-	spawn ssh -o "ProxyCommand=nc -x $proxy_host:$proxy_port %h %p" $server
+	spawn ssh -o "ProxyCommand=nc -x $proxy_host:$proxy_port %h %p" -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" $server
 } else {
-	spawn ssh -p $port $server
+	spawn ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -p $port $server
 }
 
 # Mission of this first expect - get to the shell command prompt. If the

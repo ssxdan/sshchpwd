@@ -43,7 +43,7 @@ if { $proxy == 1 } {
 	set proxy_host $env(PROXY_HOST)
 	set proxy_port $env(PROXY_PORT)
 	send_user "Using proxy $proxy_host:$proxy_port\n"  
-	spawn ssh -o "ProxyCommand=nc -x $proxy_host:$proxy_port %h %p" -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" $server
+	spawn ssh -o "ProxyCommand=/usr/bin/nc --proxy-type socks4 --proxy $proxy_host:$proxy_port %h %p" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $server
 } else {
 	spawn ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -p $port $server
 }
@@ -63,7 +63,7 @@ expect {
 		send_user " (detected password login prompt - possibly token)\n"
 		send "$tokpwd\n" 
 		expect {
-			" UNIX password:" {
+			-re " UNIX \[pP\]assword:| contraseña de UNIX" {
 				send_user " (detected additional password prompt - old password)\n"
 				send "$oldpwd\n" 
 				send_user " (continuing expect loop)\n"
@@ -103,15 +103,15 @@ expect {
 					}
 				}
 			}
-			-re "\[nN\]ew \[pP\]assword:|\[nN\]ew \[pP\]assword \[aA\]gain:" {
 				send "$newpwd\n" 
+			-re "\[nN\]ew \[pP\]assword:|\[nN\]ew \[pP\]assword \[aA\]gain:|ueva contraseña:" {
 				expect {
 					"between changes." {
 						send_error "1;$server;Necesary more time between changes.\n"
 						exit 1
 					}
-					-re "\[nN\]ew \[pP\]assword:|\[nN\]ew \[pP\]assword \[aA\]gain:" {
 						send "$newpwd\n" 
+					-re "\[nN\]ew \[pP\]assword:|\[nN\]ew \[pP\]assword \[aA\]gain:|ueva contraseña:" {
 						expect {
 							-re "$prompt" { 
 								send_user " (detected shell command prompt)\n"

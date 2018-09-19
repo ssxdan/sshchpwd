@@ -32,7 +32,7 @@ set port [lindex $argv 1]
 set tokpwd [lindex $argv 2]
 set oldpwd $env(OLD_PASSWORD)
 set newpwd $env(NEW_PASSWORD)
-set prompt "\[>%\\$#\] "
+set prompt "\[>%\\$#\]"
 set proxy 0
 
 if { $port == "" }  { set port "22" }
@@ -59,7 +59,7 @@ expect {
 		send_user " (continuing expect loop)\n"
 		exp_continue
 	}
-	"assword:" { 
+	-re "assword:| contraseña de UNIX" {
 		send_user " (detected password login prompt - possibly token)\n"
 		send "$tokpwd\n" 
 		expect {
@@ -103,15 +103,15 @@ expect {
 					}
 				}
 			}
-				send "$newpwd\n" 
 			-re "\[nN\]ew \[pP\]assword:|\[nN\]ew \[pP\]assword \[aA\]gain:|ueva contraseña:" {
+				send "$newpwd\n"
 				expect {
 					"between changes." {
 						send_error "1;$server;Necesary more time between changes.\n"
 						exit 1
 					}
-						send "$newpwd\n" 
 					-re "\[nN\]ew \[pP\]assword:|\[nN\]ew \[pP\]assword \[aA\]gain:|ueva contraseña:" {
+						send "$newpwd\n"
 						expect {
 							-re "$prompt" { 
 								send_user " (detected shell command prompt)\n"

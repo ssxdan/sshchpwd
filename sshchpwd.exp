@@ -63,6 +63,34 @@ expect {
 		send_user " (detected password login prompt - possibly token)\n"
 		send "$tokpwd\n" 
 		expect {
+			-re "\[nN\]ew \[pP\]assword:|\[nN\]ew \[pP\]assword \[aA\]gain:|ueva contraseña:|\[nN\]ew UNIX password" {
+				send "$newpwd\n"
+				expect {
+					"between changes." {
+						send_error "1;$server;Necesary more time between changes.\n"
+						exit 1
+					}
+					-re "\[nN\]ew \[pP\]assword:|\[nN\]ew \[pP\]assword \[aA\]gain:|ueva contraseña:|\[nN\]ew UNIX password" {
+						send "$newpwd\n"
+						expect {
+							-re "$prompt" {
+								send_user " (detected shell command prompt)\n"
+								send_error "0;$server;Password successfully changed.\n"
+								exit 0
+							}
+							"Connection to " {
+								send_user " (detected connection closed - assuming password change successful)\n"
+								send_error "0;$server;Password successfully changed.\n"
+								exit 0
+							}
+							default {
+								send_error "1;$server;Password change failed.\n"
+								exit 1
+							}
+						}
+					}
+				}
+			}
 			-re " UNIX \[pP\]assword:| contraseña de UNIX" {
 				send_user " (detected additional password prompt - old password)\n"
 				send "$oldpwd\n" 
@@ -100,34 +128,6 @@ expect {
 					default {
 						send_error "1;$server;Password change failed.\n"
 						exit 1
-					}
-				}
-			}
-			-re "\[nN\]ew \[pP\]assword:|\[nN\]ew \[pP\]assword \[aA\]gain:|ueva contraseña:" {
-				send "$newpwd\n"
-				expect {
-					"between changes." {
-						send_error "1;$server;Necesary more time between changes.\n"
-						exit 1
-					}
-					-re "\[nN\]ew \[pP\]assword:|\[nN\]ew \[pP\]assword \[aA\]gain:|ueva contraseña:" {
-						send "$newpwd\n"
-						expect {
-							-re "$prompt" { 
-								send_user " (detected shell command prompt)\n"
-								send_error "0;$server;Password successfully changed.\n"
-								exit 0
-							}
-							"Connection to " { 
-								send_user " (detected connection closed - assuming password change successful)\n"
-								send_error "0;$server;Password successfully changed.\n"
-								exit 0
-							}
-							default {
-								send_error "1;$server;Password change failed.\n"
-								exit 1
-							}
-						}
 					}
 				}
 			}

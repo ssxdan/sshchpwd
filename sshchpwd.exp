@@ -26,7 +26,7 @@
 # export PROXY_HOST=127.0.0.1
 # export export PROXY_PORT=1080
 
-set timeout 15
+set timeout 30
 set server [lindex $argv 0]
 set port [lindex $argv 1]
 set tokpwd [lindex $argv 2]
@@ -38,14 +38,23 @@ set proxy 0
 if { $port == "" }  { set port "22" }
 if { $tokpwd == "" }  { set tokpwd $oldpwd }
 
+if { [info exists ::env(EXPECT_USER)] } {
+    set user $env(EXPECT_USER)
+} else {
+    set user $env(USER)
+}
+
 send_user "connecting to $server on port $port\n"
 if { $proxy == 1 } {
 	set proxy_host $env(PROXY_HOST)
 	set proxy_port $env(PROXY_PORT)
-	send_user "Using proxy $proxy_host:$proxy_port\n"  
-	spawn ssh -o "ProxyCommand=/usr/bin/nc --proxy-type socks4 --proxy $proxy_host:$proxy_port %h %p" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $server
+	send_user "Using proxy $proxy_host:$proxy_port\n"
+	spawn ssh -o "ProxyCommand=/usr/bin/nc --proxy-type socks4 --proxy $proxy_host:$proxy_port %h %p" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null  $user@$server
+} elseif { $proxy == "2" } {
+	set proxy_host $env(PROXY_HOST)
+	spawn ssh -o "ProxyCommand=ssh -q -W %h:%p $proxy_host" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p $port $user@$server
 } else {
-	spawn ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -p $port $server
+	spawn ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -p $port $user@$server
 }
 
 # Mission of this first expect - get to the shell command prompt. If the
